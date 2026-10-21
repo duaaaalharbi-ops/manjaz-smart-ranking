@@ -239,6 +239,8 @@
       const compatible=(t,target,own)=>{
         if(occupiedOriginal(t,day,target.period))return false;
         const rs=activeRules(t,rules,date);
+        if(ruleByCode(rs,"breastfeeding")&&(((day==="sun"||day==="mon")&&Number(target.period)===7)||(["tue","wed","thu"].includes(day)&&Number(target.period)===6)))return false;
+        if(settings.disallowAdjacentOriginal&&[Number(target.period)-1,Number(target.period)+1].some(p=>p>0&&occupiedOriginal(t,day,p)))return false;
         if(ruleByCode(rs,"class_only")&&!((ruleValue(ruleByCode(rs,"class_only")).stages||[]).includes(stage(target.class_name))))return false;
         for(const x of planned){
           if(x===own||x===target)continue;
@@ -264,12 +266,14 @@
           const before=prefTier(ta,ar,a)+prefTier(tb,br,b);
           const after=prefTier(ta,ar,b)+prefTier(tb,br,a);
           if(after>=before)continue;
-          const ia=a.assigned_teacher_id,na=a.assigned_name;
-          a.assigned_teacher_id=b.assigned_teacher_id;a.assigned_name=b.assigned_name;
-          b.assigned_teacher_id=ia;b.assigned_name=na;
-          a.preference_rank=prefTier(tb,br,a);b.preference_rank=prefTier(ta,ar,b);
-          a.reasons=[...a.reasons,"تبادل تنظيمي محفوظ العدالة"];
-          b.reasons=[...b.reasons,"تبادل تنظيمي محفوظ العدالة"];
+          const first={assigned_teacher_id:a.assigned_teacher_id,assigned_name:a.assigned_name,tier:a.tier,
+            base_score:a.base_score,reasons:a.reasons};
+          const second={assigned_teacher_id:b.assigned_teacher_id,assigned_name:b.assigned_name,tier:b.tier,
+            base_score:b.base_score,reasons:b.reasons};
+          Object.assign(a,second,{preference_rank:prefTier(tb,br,a),
+            reasons:[...second.reasons,"تبادل تنظيمي محفوظ العدالة"]});
+          Object.assign(b,first,{preference_rank:prefTier(ta,ar,b),
+            reasons:[...first.reasons,"تبادل تنظيمي محفوظ العدالة"]});
           changes++;improved=true;break outer;
         }
       }
