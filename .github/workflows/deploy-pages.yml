@@ -1,0 +1,56 @@
+name: Deploy M-Fair to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+      - "config.js"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: mfair-github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish isolated M-Fair static site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout independent repository
+        uses: actions/checkout@v4
+
+      - name: Stage public application files only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp index.html styles.css app.js config.js dist/
+          touch dist/.nojekyll
+          test -s dist/index.html
+          test -s dist/app.js
+          test -s dist/config.js
+          echo "Published M-Fair assets ready"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
