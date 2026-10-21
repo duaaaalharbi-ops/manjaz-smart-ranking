@@ -1,0 +1,20 @@
+name: Test Smart Ranking Engine
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ranking-engine.js"
+      - "tests/**"
+      - ".github/workflows/test-engine.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm syntax
+        run: node --check ranking-engine.js && node --check tests/ranking-engine.test.cjs
+      - name: Run independent fairness regression suite
+        run: node --test tests/ranking-engine.test.cjs
