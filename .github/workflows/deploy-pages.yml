@@ -40,6 +40,10 @@ jobs:
           node --check ranking-engine.js
           node --check studio.js
           node --test tests/ranking-engine.test.cjs
+          ! grep -Eq 'exception_grade|grade3Demand|grade2Demand|grade1Demand' ranking-engine.js studio.js
+          grep -q 'استثناء مرن' ranking-engine.js
+          grep -q 'استثناء مشروط' ranking-engine.js
+          grep -q 'استثناء محمي' ranking-engine.js
 
       - name: Stage public application files only
         shell: bash
