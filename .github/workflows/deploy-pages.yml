@@ -1,4 +1,4 @@
-name: Deploy M-Fair to GitHub Pages
+name: Deploy Smart Ranking to GitHub Pages
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
       - "styles.css"
       - "app.js"
       - "config.js"
+      - "studio.css"
+      - "studio.js"
+      - "ranking-engine.js"
+      - "tests/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -22,7 +26,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Publish isolated M-Fair static site
+    name: Publish isolated Smart Ranking site
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -31,17 +35,26 @@ jobs:
       - name: Checkout independent repository
         uses: actions/checkout@v4
 
+      - name: Verify simulation engine and UI source
+        run: |
+          node --check ranking-engine.js
+          node --check studio.js
+          node --test tests/ranking-engine.test.cjs
+
       - name: Stage public application files only
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp index.html styles.css app.js config.js dist/
+          cp index.html styles.css app.js config.js ranking-engine.js studio.js studio.css dist/
           touch dist/.nojekyll
           test -s dist/index.html
           test -s dist/app.js
+          test -s dist/ranking-engine.js
+          test -s dist/studio.js
+          test -s dist/studio.css
           test -s dist/config.js
-          echo "Published M-Fair assets ready"
+          echo "Published smart ranking assets ready"
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
