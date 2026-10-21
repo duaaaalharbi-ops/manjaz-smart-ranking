@@ -104,12 +104,11 @@ function run(){
  try{
   if(S.source==="none")throw Error("بيانات الكادر غير معتمدة. ابدئي بالمثال التجريبي.");
   const date=$("studioDate").value;
-  const bounds=["grade3","grade2","grade1"].map(id=>Number($(id).value));
-  if(bounds.some(n=>!Number.isInteger(n)||n<1||n>120)||bounds[0]>bounds[1]||bounds[1]>bounds[2])
-   throw Error("ترتيب حدود الضرورة غير صحيح: الدرجة ٣ ثم ٢ ثم ١.");
+  // Exceptions are governed by named policies and capacity shortfall.
+  // Preview thresholds are engine defaults only, never an admin edit here.
   const result=E.simulate({
    date,teachers:S.teachers,rules:S.rules,absences:S.absences,assignments:S.assignments,
-   vacancies:parseVacancies(date),settings:{grade3Demand:bounds[0],grade2Demand:bounds[1],grade1Demand:bounds[2]}
+   vacancies:parseVacancies(date),settings:{}
   });
   S.last=result;render(result);$("studioExport").disabled=false;
   status("انتهت المحاكاة: "+result.covered+" مسندة، و"+result.uncovered+" غير مسندة. لم تُحفظ تكليفات.","success");
@@ -128,7 +127,7 @@ function render(result){
  thead.append(tr);table.append(thead);
  const body=el("tbody");
  result.assignments.forEach(a=>{
-  const tr=el("tr");[a.period,a.class_name,a.assigned_name,a.tier?("درجة "+({1:3,2:2,3:1}[a.tier])):"دون استثناء",a.reasons.join("؛ ")].forEach(x=>tr.append(el("td",String(x))));
+  const tr=el("tr");[a.period,a.class_name,a.assigned_name,a.exception_label||"دون استثناء",a.reasons.join("؛ ")].forEach(x=>tr.append(el("td",String(x))));
   body.append(tr);
  });
  result.unfilled.forEach(a=>{
@@ -147,8 +146,8 @@ function csvSafe(value){
 function downloadCSV(){
  if(!S.last)return;
  const r=S.last;
- const lines=[["التاريخ","الحصة","الفصل","المعلمة المسندة","درجة الاستثناء","السبب"]];
- r.assignments.forEach(a=>lines.push([r.date,a.period,a.class_name,a.assigned_name,a.tier||"لا",a.reasons.join("؛ ")]));
+ const lines=[["التاريخ","الحصة","الفصل","المعلمة المسندة","نوع الاستثناء","السبب"]];
+ r.assignments.forEach(a=>lines.push([r.date,a.period,a.class_name,a.assigned_name,a.exception_label||"دون استثناء",a.reasons.join("؛ ")]));
  r.unfilled.forEach(a=>lines.push([r.date,a.period,a.class_name,"غير مسندة","—",a.reason]));
  const blob=new Blob(["\ufeff"+lines.map(row=>row.map(csvSafe).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
  const url=URL.createObjectURL(blob),link=document.createElement("a");
