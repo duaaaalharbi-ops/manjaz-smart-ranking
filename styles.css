@@ -1,0 +1,41 @@
+:root{font-family:Tahoma,Arial,sans-serif;color:#153640;background:#f4f7f6;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0;line-height:1.75}
+.container{max-width:960px;margin:auto;padding:0 18px}
+.site-header{background:#123d48;color:white;box-shadow:0 2px 7px #11343c1a}
+.header-content{display:flex;gap:9px;justify-content:center;align-items:center;flex-direction:column;padding:18px}
+.school{font-size:13px;color:#dae8e4}
+.brand{font-size:27px;letter-spacing:.3px}
+.brand small{font-size:13px;color:#b7d6d0}
+.intro{padding:27px 0 12px}
+.intro h1{font-size:clamp(22px,3vw,30px);line-height:1.6;margin:3px 0 8px}
+.intro p{margin:0;color:#52686f}
+.section-label{font-size:12px;color:#0e6a63;font-weight:700}
+.card{background:white;border:1px solid #d7e3e1;border-radius:15px;padding:20px;margin:17px 0;box-shadow:0 3px 12px #163c4010}
+.card h2{font-size:19px;margin:0 0 9px}
+.card p{margin-top:5px}
+.notice{padding:13px 15px;border-radius:10px;background:#e7f1ee;border:1px solid #cce1dc;color:#28574e;font-size:14px;margin:13px 0}
+.notice.error{background:#fff1ed;border-color:#f2cfc8;color:#913e31}
+.notice.success{background:#e7f4ec;border-color:#c1e2cf;color:#235b43}
+.muted{color:#62767b;font-size:14px}
+.auth-card{max-width:540px}
+form{display:grid;gap:9px}
+label{font-size:14px;font-weight:700}
+input{font:inherit;width:100%;border:1px solid #b9ccca;border-radius:10px;padding:11px;background:white;min-height:44px;direction:ltr;text-align:left;color:#173c44}
+input:focus-visible,button:focus-visible{outline:3px solid #80b8ad;outline-offset:2px}
+button{border:0;border-radius:10px;background:#145d64;color:#fff;min-height:44px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
+button.secondary{background:#e6f0ed;color:#165763}
+button:disabled{opacity:.6;cursor:wait}
+.form-message{font-size:14px;min-height:1.3em;white-space:pre-wrap}
+.form-message.error{color:#9f3434}
+.form-message.success{color:#186544}
+.admin-heading,.section-head{display:flex;align-items:center;justify-content:space-between;gap:13px;flex-wrap:wrap}
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.summary{margin:0}
+.summary span{display:block;font-size:13px;color:#667b7e}
+.summary strong{font-size:27px}
+.teacher-list{display:grid;gap:7px}
+.teacher-entry{display:flex;justify-content:space-between;gap:10px;border:1px solid #e0ebea;border-radius:8px;padding:8px 11px;font-size:14px}
+.site-footer{text-align:center;color:#63777c;font-size:12px;padding:25px}
+[hidden]{display:none!important}
+@media(max-width:520px){.summary-grid{grid-template-columns:1fr 1fr}.summary:last-child{grid-column:span 2}.card{padding:16px}.brand{font-size:24px}}
