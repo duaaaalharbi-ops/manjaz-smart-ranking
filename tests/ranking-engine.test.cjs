@@ -49,26 +49,26 @@ test("stage preference optimizes only among already selected teachers",()=>{
  const byClass=Object.fromEntries(r.assignments.map(a=>[E.stage(a.class_name),a.assigned_teacher_id]));
  assert.equal(byClass[1],"b");assert.equal(byClass[2],"a");
 });
-test("grade 3 is not unlocked by demand alone",()=>{
+test("flexible exception cannot unlock by volume without repeated low-load assignments",()=>{
  const t=[teacher("a","معلمة أ",10)];
- const rules=[{teacher_id:"a",rule_code:"exception_grade",active:true,rule_details:{degree:3}}];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"flexible"}}];
  const vacancies=Array.from({length:11},(_,i)=>vacancy("v"+i,1+(i%6),"أول"+(i+1)));
  const r=simulate({teachers:t,rules,vacancies});
  assert.equal(r.covered,0);
 });
-test("grade 3 unlocks only with repeated low-load substitutions",()=>{
+test("flexible exception unlocks only after repeated low-load substitutions",()=>{
  const t=[teacher("a","معلمة أ",10)];
- const rules=[{teacher_id:"a",rule_code:"exception_grade",active:true,rule_details:{degree:3}}];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"flexible"}}];
  const assignments=[{assignment_date:"2026-10-18",assigned_teacher_id:"a",period:4,class_name:"أول1",status:"approved"},
  {assignment_date:"2026-10-19",assigned_teacher_id:"a",period:4,class_name:"أول2",status:"approved"}];
  const vacancies=Array.from({length:11},(_,i)=>vacancy("v"+i,1+(i%6),"ثاني"+(i+1)));
  const r=simulate({teachers:t,rules,assignments,vacancies});
  assert.ok(r.covered>0);
 });
-test("grade 2 needs a previous weekly absence and residual load",()=>{
+test("conditional exception requires a documented weekly missed load",()=>{
  const t=[teacher("a","معلمة أ",10)];
  t[0].schedule=[{day_key:"mon",period:2,class_name:"أول2"}];
- const rules=[{teacher_id:"a",rule_code:"exception_grade",active:true,rule_details:{degree:2}}];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"conditional"}}];
  const vacancies=Array.from({length:13},(_,i)=>vacancy("v"+i,1+(i%6),"ثاني"+(i+1)));
  assert.equal(simulate({teachers:t,rules,vacancies}).covered,0);
  const absences=[{absent_teacher_id:"a",absence_date:"2026-10-19",status:"active"}];
@@ -84,4 +84,37 @@ test("no automatic approval or writing to data store",()=>{
  const r=simulate({teachers:[],vacancies:[vacancy("v1",1,"أول1")]});
  assert.equal(r.approval_ready,false);
  assert.equal(r.uncovered,1);
+});
+
+test("named exception labels never expose numeric grades",()=>{
+ const t=[teacher("a","معلمة أ",10)];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"flexible"}}];
+ const assignments=[{assignment_date:"2026-10-18",assigned_teacher_id:"a",period:4,class_name:"أول1",status:"approved"},
+ {assignment_date:"2026-10-19",assigned_teacher_id:"a",period:4,class_name:"أول2",status:"approved"}];
+ const vacancies=Array.from({length:11},(_,i)=>vacancy("v"+i,1+(i%6),"ثاني"+(i+1)));
+ const r=simulate({teachers:t,rules,assignments,vacancies});
+ assert.equal(r.assignments[0].exception_kind,"flexible");
+ assert.equal(r.assignments[0].exception_label,"استثناء مرن");
+ assert.equal(r.assignments[0].phase,1);
+ assert.ok(!JSON.stringify(r).includes("درجة الاستثناء"));
+});
+test("protected exception is never raised below critical pressure",()=>{
+ const t=[teacher("a","معلمة أ",10)];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"protected"}}];
+ const vacancies=Array.from({length:19},(_,i)=>vacancy("v"+i,1+(i%6),"ثاني"+(i+1)));
+ assert.equal(simulate({teachers:t,rules,vacancies}).covered,0);
+ const extended=[...vacancies,vacancy("v20",2,"ثاني 20")];
+ assert.ok(simulate({teachers:t,rules,vacancies:extended}).covered>0);
+});
+test("invalid exception policy never silently becomes an ordinary nomination",()=>{
+ const t=[teacher("a","معلمة أ",10)];
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"unknown"}}];
+ assert.equal(simulate({teachers:t,rules,vacancies:[vacancy("v",1,"أول2")]}).covered,0);
+});
+test("ordinary eligible teacher is chosen before a protected exception in high need",()=>{
+ const a=teacher("a","معلمة أ",10),b=teacher("b","معلمة ب",10);
+ const rules=[{teacher_id:"a",rule_code:"exception_policy",active:true,rule_details:{kind:"protected"}}];
+ const vacancies=Array.from({length:20},(_,i)=>vacancy("v"+i,1+(i%6),"أول"+(i+1)));
+ const r=simulate({teachers:[a,b],rules,vacancies});
+ assert.equal(r.assignments[0].assigned_teacher_id,"b");
 });
