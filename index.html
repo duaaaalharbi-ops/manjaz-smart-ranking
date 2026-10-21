@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#123d48">
+  <meta name="description" content="المفاضلة الذكية لحصص الاحتياط - نظام مستقل عن منصة منجز">
+  <title>المفاضلة الذكية | الثانوية الرابعة والتسعون</title>
+  <link rel="stylesheet" href="./styles.css?v=1.0.0">
+  <script defer src="./config.js?v=1.0.0"></script>
+  <script defer src="./app.js?v=1.0.0"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-content">
+      <span class="school">الإدارة العامة للتعليم بمحافظة جدة</span>
+      <strong class="brand">المفاضلة الذكية <small>M-Fair</small></strong>
+      <span class="school">الثانوية الرابعة والتسعون – مسارات</span>
+    </div>
+  </header>
+  <main class="container">
+    <section class="intro">
+      <div class="section-label">نظام إداري مستقل | المرحلة التأسيسية</div>
+      <h1>محرك المفاضلة الذكية لسداد حصص الاحتياط</h1>
+      <p>نظام مستقل بقاعدة بيانات محمية. لا يتصل بسجلات الاحتياط المنشورة في منصة منجز ولا يغيرها.</p>
+    </section>
+
+    <div id="connectStatus" class="notice" role="status" aria-live="polite">جارٍ فحص اتصال قاعدة البيانات المستقلة...</div>
+
+    <section id="loginArea" class="card auth-card" aria-label="الدخول الإداري">
+      <h2>الدخول الإداري</h2>
+      <p class="muted">يتطلب حسابًا مفعلًا داخل مشروع Supabase الجديد، وصلاحية إدارة معتمدة.</p>
+      <form id="loginForm" autocomplete="on">
+        <label for="email">البريد الإلكتروني للإدارة</label>
+        <input id="email" name="email" type="email" autocomplete="username" required placeholder="البريد الإلكتروني">
+        <label for="password">كلمة المرور</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="كلمة المرور">
+        <button type="submit" id="btnLogin">تسجيل الدخول</button>
+      </form>
+      <p id="loginMessage" class="form-message" role="alert" aria-live="polite"></p>
+    </section>
+
+    <section id="adminArea" hidden aria-label="لوحة المفاضلة">
+      <div class="card admin-heading">
+        <div>
+          <div class="section-label">صلاحيات الإدارة</div>
+          <h2>لوحة إعداد المفاضلة</h2>
+          <p id="adminIdentity" class="muted"></p>
+        </div>
+        <button id="btnLogout" class="secondary" type="button">تسجيل الخروج</button>
+      </div>
+      <div class="summary-grid">
+        <article class="card summary">
+          <span>المعلمات المسجلات</span>
+          <strong id="teacherCount">—</strong>
+        </article>
+        <article class="card summary">
+          <span>التكليفات المسجلة</span>
+          <strong id="assignmentCount">—</strong>
+        </article>
+        <article class="card summary">
+          <span>سجلات الغياب</span>
+          <strong id="absenceCount">—</strong>
+        </article>
+      </div>
+      <section class="card">
+        <div class="section-head"><h2>التحقق من ربط البيانات</h2><button id="btnRefresh" class="secondary" type="button">تحديث القراءة</button></div>
+        <p class="muted">تعرض هذه المرحلة بيانات النظام الجديد فقط. لم تُستورد بيانات المعلمات بعد.</p>
+        <p id="adminMessage" class="form-message" role="status" aria-live="polite"></p>
+        <div id="teacherList" class="teacher-list"></div>
+      </section>
+      <section class="card">
+        <h2>مراحل التطوير التالية</h2>
+        <p>إدخال بيانات الكادر والجداول بعد المراجعة، ثم تنفيذ محرك التحقق والمفاضلة، ثم المحاكاة والاختبارات والاعتماد.</p>
+        <div class="notice">الترشيح وحفظ التكليفات غير مفعّلين في هذه النسخة التأسيسية؛ حفاظًا على عدم إنتاج تكليفات قبل اعتماد الضوابط.</div>
+      </section>
+    </section>
+
+    <section class="card public-roadmap" aria-label="حدود المرحلة">
+      <h2>حدود الاستقلال</h2>
+      <p>يعمل هذا التطبيق من مستودع مستقل ومشروع Supabase مستقل. الربط مع الصفحة الرئيسية لمنجز مؤجل إلى ما بعد اكتمال الاختبارات والموافقة عليه.</p>
+    </section>
+  </main>
+  <footer class="site-footer">الثانوية الرابعة والتسعون – مسارات | المفاضلة الذكية | إعداد تقني تجريبي</footer>
+</body>
+</html>
