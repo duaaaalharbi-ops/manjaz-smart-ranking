@@ -11,7 +11,7 @@
   "use strict";
   const DEFAULTS=Object.freeze({
     maxDailyLong:5,maxDailyShort:4,normalWeeklyCap:24,advancedWeeklyCap:22,expertWeeklyCap:18,
-    grade3Demand:11,grade2Demand:13,grade1Demand:20,
+    flexibleMinDemand:11,conditionalMinDemand:11,protectedMinDemand:20,
     repeatLowLoadCount:2,weights:{week:30,term:10,daily:18,workload:0.35,consecutive:9},
     fullCadre:false,disallowAdjacentOriginal:false
   });
@@ -65,10 +65,16 @@
   }
   function ruleValue(r){return r.rule_details||r.details||{};}
   function ruleByCode(rs,code){return rs.find(r=>r.rule_code===code);}
-  function exceptionDegree(rs){
-    const r=ruleByCode(rs,"exception_grade");
-    const value=Number(r?ruleValue(r).degree:0);
-    return [1,2,3].includes(value)?value:0;
+  const EXCEPTION_LABELS=Object.freeze({
+    none:"دون استثناء",flexible:"استثناء مرن",
+    conditional:"استثناء مشروط",protected:"استثناء محمي"
+  });
+  const EXCEPTION_PHASE=Object.freeze({none:0,flexible:1,conditional:2,protected:3});
+  function exceptionKind(rs){
+    const r=ruleByCode(rs,"exception_policy");
+    const kind=r?String(ruleValue(r).kind||""):"none";
+    if(!Object.hasOwn(EXCEPTION_PHASE,kind))return "invalid";
+    return kind;
   }
   function scheduleOf(t){return Array.isArray(t.schedule)?t.schedule:null;}
   function occupiedOriginal(t,day,period){
@@ -136,23 +142,21 @@
       return {ok:false,reason:"لديها احتياط آخر في الحصة نفسها"};
     if(context.sameTeacherClass.has(id+"|"+norm(v.class_name)))
       return {ok:false,reason:"تكرار احتياط الفصل للمعلمة في اليوم"};
-    const deg=exceptionDegree(rs);
-    let tier=0;
-    if(deg===3){
-      tier=1;
-      if(base>=15)return {ok:false,reason:"درجة ٣ مخصصة للنصاب الأقل من ١٥"};
-      if(context.demand<s.grade3Demand)return {ok:false,reason:"لم تبلغ الحاجة حد مراجعة الاستثناء ٣"};
-      if(!context.lowLoadRepeated)return {ok:false,reason:"لم يثبت تكرار إسناد الاحتياط للأقل نصابًا"};
-    }else if(deg===2){
-      tier=2;
-      if(context.demand<s.grade2Demand)return {ok:false,reason:"لم تبلغ الحاجة مستوى الضرورة"};
-      if(!previousAbsenceMissed(t,date,context.absences))return {ok:false,reason:"لا يوجد نقص أسبوعي موثق بسبب غياب سابق"};
-      if(wk>1)return {ok:false,reason:"تكرر إسناد الاحتياط خلال الأسبوع"};
-    }else if(deg===1){
-      tier=3;
-      if(context.demand<s.grade1Demand)return {ok:false,reason:"لم تبلغ الحاجة مستوى الضرورة القصوى"};
+    const kind=exceptionKind(rs);
+    if(kind==="invalid")return {ok:false,reason:"نوع الاستثناء غير معتمد، ويجب مراجعته إداريًا"};
+    const phase=EXCEPTION_PHASE[kind];
+    if(kind==="flexible"){
+      if(base>=15)return {ok:false,reason:"الاستثناء المرن مخصص للمكلفات بنصاب أقل من ١٥"};
+      if(context.demand<s.flexibleMinDemand)return {ok:false,reason:"الطلب أقل من مستوى الاحتياج المرتفع"};
+      if(!context.lowLoadRepeated)return {ok:false,reason:"لم يتأكد تكرار الإسناد على الأقل نصابًا"};
+    }else if(kind==="conditional"){
+      if(context.demand<s.conditionalMinDemand)return {ok:false,reason:"لم يثبت الاحتياج المرتفع للاستثناء المشروط"};
+      if(!previousAbsenceMissed(t,date,context.absences))return {ok:false,reason:"لا يوجد نقص موثق في العبء الأسبوعي بسبب غياب سابق"};
+      if(wk>1)return {ok:false,reason:"تكرار الإسناد الأسبوعي يمنع رفع الاستثناء المشروط"};
+    }else if(kind==="protected"){
+      if(context.demand<s.protectedMinDemand)return {ok:false,reason:"لم تبلغ الحاجة مستوى الضرورة القصوى"};
     }
-    if(tier>allowTier)return {ok:false,reason:"درجة الاستثناء محمية في المرحلة الحالية"};
+    if(phase>allowTier)return {ok:false,reason:"الاستثناء التنظيمي لا يُرفع ما دامت الفئات السابقة قادرة على التغطية"};
     const wr=context.weekStart,term=context.termStart;
     const hist=context.history;
     const termCount=countAssignments(hist,id,term,date)+context.plannedFor(id);
@@ -161,8 +165,8 @@
     const score=(wk*weights.week)+(termCount*weights.term)+(dy*weights.daily)
       +((base+wk)*weights.workload)+(adj*weights.consecutive);
     reasons.push("مستوفية شروط الأهلية","السقف الأسبوعي "+(base+wk)+"/"+maxWeek,"تكليفات الأسبوع "+wk);
-    if(tier)reasons.push("رفع درجة الاستثناء "+deg+" وفق شروط الضرورة");
-    return {ok:true,tier,score,preference:prefTier(t,rs,v),reasons};
+    if(phase)reasons.push("الاستعانة وفق "+EXCEPTION_LABELS[kind]+" بعد عدم كفاية المؤهلات السابقة");
+    return {ok:true,phase,exception_kind:kind,exception_label:EXCEPTION_LABELS[kind],score,preference:prefTier(t,rs,v),reasons};
   }
   function validateScenario(input){
     const date=String(input.date||"");const day=dayKey(date);
@@ -213,17 +217,17 @@
         &&norm(a.class_name)===norm(v.class_name));
       if(sameExisting){uncovered.push({...v,reason:"الحصة مسندة مسبقًا في السجل المعتمد"});continue;}
       let best=null,stageUsed=0;
-      for(let tier=0;tier<=3;tier++){
-        const candidates=(input.teachers||[]).map(t=>({teacher:t,...evaluateCandidate(t,v,context,tier)}))
-          .filter(c=>c.ok).sort((a,b)=>a.tier-b.tier||a.score-b.score
+      for(let phase=0;phase<=3;phase++){
+        const candidates=(input.teachers||[]).map(t=>({teacher:t,...evaluateCandidate(t,v,context,phase)}))
+          .filter(c=>c.ok).sort((a,b)=>a.phase-b.phase||a.score-b.score
             ||norm(a.teacher.full_name).localeCompare(norm(b.teacher.full_name),"ar")||teacherId(a.teacher).localeCompare(teacherId(b.teacher)));
-        if(candidates.length){best=candidates[0];stageUsed=tier;break;}
+        if(candidates.length){best=candidates[0];stageUsed=phase;break;}
       }
       if(!best){uncovered.push({...v,reason:"لا توجد معلمة مؤهلة ضمن السقوف وشروط الضرورة الحالية"});continue;}
       const a={
         id:v.id,period:Number(v.period),class_name:String(v.class_name),
         absent_teacher_id:String(v.absent_teacher_id),assigned_teacher_id:teacherId(best.teacher),
-        assigned_name:best.teacher.full_name||"",tier:best.tier,
+        assigned_name:best.teacher.full_name||"",exception_kind:best.exception_kind,exception_label:best.exception_label,phase:best.phase,
         base_score:Number(best.score.toFixed(2)),preference_rank:best.preference,
         reasons:best.reasons,stage_used:stageUsed
       };
@@ -266,9 +270,9 @@
           const before=prefTier(ta,ar,a)+prefTier(tb,br,b);
           const after=prefTier(ta,ar,b)+prefTier(tb,br,a);
           if(after>=before)continue;
-          const first={assigned_teacher_id:a.assigned_teacher_id,assigned_name:a.assigned_name,tier:a.tier,
+          const first={assigned_teacher_id:a.assigned_teacher_id,assigned_name:a.assigned_name,phase:a.phase,exception_kind:a.exception_kind,exception_label:a.exception_label,
             base_score:a.base_score,reasons:a.reasons};
-          const second={assigned_teacher_id:b.assigned_teacher_id,assigned_name:b.assigned_name,tier:b.tier,
+          const second={assigned_teacher_id:b.assigned_teacher_id,assigned_name:b.assigned_name,phase:b.phase,exception_kind:b.exception_kind,exception_label:b.exception_label,
             base_score:b.base_score,reasons:b.reasons};
           Object.assign(a,second,{preference_rank:prefTier(tb,br,a),
             reasons:[...second.reasons,"تبادل تنظيمي محفوظ العدالة"]});
@@ -290,14 +294,14 @@
       finalKeys.add(key);
     }
     return {
-      date,version:"2.0.0-pilot",approval_ready:false,
-      policy_status:"بانتظار اعتماد الحدود النهائية واستيراد كشف المعلمات",
+      date,version:"2.1.0-named-exceptions",approval_ready:false,
+      policy_status:"استثناءات مسماة ومحاكاة فقط؛ لم تُعتمد البيانات ولا قواعد الاستثناءات نهائيًا",
       requested:vacancies.length,covered:planned.length,uncovered:uncovered.length,
       swaps:changes,stage_optimization:"تفضيلات تنظيمية لاحقة لا تغيّر عدد التكليفات لكل معلمة",
       baseline:baseSnapshot,assignments:planned,unfilled:uncovered,
-      diagnostics:{dailyDemand:demand,lowLoadRepeated,thresholds:{grade3:settings.grade3Demand,grade2:settings.grade2Demand,grade1:settings.grade1Demand}},
+      diagnostics:{dailyDemand:demand,lowLoadRepeated,policyTriggers:{flexible:settings.flexibleMinDemand,conditional:settings.conditionalMinDemand,protected:settings.protectedMinDemand}},
       note:"نتيجة محاكاة فقط، لا تنتج تكليفًا رسميًا ولا تنشر بيانات في منجز."
     };
   }
-  return {simulate,stage,norm,weekBounds,defaultSettings:()=>JSON.parse(JSON.stringify(DEFAULTS))};
+  return {simulate,stage,norm,weekBounds,exceptionLabels:EXCEPTION_LABELS,defaultSettings:()=>JSON.parse(JSON.stringify(DEFAULTS))};
 });
