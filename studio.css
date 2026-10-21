@@ -1,0 +1,26 @@
+
+/* Experimental ranking studio; scoped to #studioPanel. */
+#studioPanel .status-pill{font-size:12px;padding:5px 11px;border-radius:20px;border:1px solid #cbded8;background:#ecf5f0;color:#28574e;font-weight:700}
+#studioPanel .studio-buttons{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+#studioPanel .studio-buttons button{flex:1 1 175px}
+#studioPanel .studio-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:16px 0}
+#studioPanel .studio-grid label{font-size:13px}
+#studioPanel input{direction:ltr;text-align:center}
+#studioPanel textarea{font:inherit;display:block;width:100%;min-height:135px;resize:vertical;border-radius:11px;border:1px solid #b9ccca;padding:11px;text-align:right;direction:rtl}
+#studioPanel .studio-fine{font-size:12px}
+#studioPanel .studio-counters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:15px 0}
+#studioPanel .studio-counter{background:#f1f7f5;border:1px solid #dae6e1;border-radius:10px;padding:10px;text-align:center}
+#studioPanel .studio-counter span{display:block;color:#536a6c;font-size:12px}
+#studioPanel .studio-counter strong{font-size:24px;color:#164b51}
+#studioPanel .studio-table-scroll{overflow-x:auto;max-width:100%;border:1px solid #d9e5e2;border-radius:10px}
+#studioPanel table{width:100%;border-collapse:collapse;min-width:650px;text-align:right}
+#studioPanel th,#studioPanel td{padding:10px;border-bottom:1px solid #e0ebe7;vertical-align:top;font-size:13px}
+#studioPanel th{background:#e9f3ef;white-space:nowrap;font-weight:700}
+#studioPanel td:nth-child(5){min-width:220px}
+#studioPanel tr.uncovered{background:#fff4ee}
+#studioPanel .studio-results h3{font-size:18px;margin:20px 0 5px}
+@media(max-width:650px){
+ #studioPanel .studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #studioPanel .studio-counters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #studioPanel .studio-buttons button{flex:1 1 100%}
+}
