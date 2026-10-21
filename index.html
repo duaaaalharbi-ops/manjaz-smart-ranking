@@ -88,13 +88,16 @@
           <button id="studioDemo" type="button">محاكاة بأسماء افتراضية</button>
           <button id="studioLoad" type="button" class="secondary">التحقق من الكادر المعتمد</button>
         </div>
-        <div class="studio-grid">
+        <div class="studio-date-row">
           <label>تاريخ المحاكاة <input id="studioDate" type="date"></label>
-          <label>بداية درجة الاستثناء ٣ <input id="grade3" type="number" min="1" max="120" value="11"></label>
-          <label>بداية درجة الاستثناء ٢ <input id="grade2" type="number" min="1" max="120" value="13"></label>
-          <label>بداية درجة الاستثناء ١ <input id="grade1" type="number" min="1" max="120" value="20"></label>
         </div>
-        <p class="muted studio-fine">قيم 11 / 13 / 20 للتجربة والتدقيق فقط، ولا تُعد ضوابط معتمدة حتى تصدر موافقة الإدارة على الحدود النهائية.</p>
+        <div class="studio-exceptions" aria-label="مسميات الاستثناءات التنظيمية">
+          <div class="studio-exception"><strong>استثناء مرن</strong><span>عند الضغط المرتفع وتكرار احتياط ذوات النصاب الأقل من ١٥، وبعد استنفاد المؤهلات غير المستثنيات.</span></div>
+          <div class="studio-exception"><strong>استثناء مشروط</strong><span>عند استمرار العجز مع نقص أسبوعي موثق وعدم تكرار التكليف بصورة مجحفة.</span></div>
+          <div class="studio-exception"><strong>استثناء محمي</strong><span>آخر الحلول في الضرورة القصوى؛ لا يرفع الموانع أو سقوف التكليف.</span></div>
+          <div class="studio-exception"><strong>استبعاد قطعي</strong><span>لا يُرفع في المحاكاة مهما بلغ الاحتياج، مثل الانتداب الجزئي المعتمد.</span></div>
+        </div>
+        <p class="muted studio-fine">المسميات تحل محل درجات الاستثناء الرقمية. يبدأ الترشيح بالمعلمات غير المستثنيات، ثم يتدرج عند وجود عجز حقيقي. حدود الضغط التجريبية داخل المحرك بانتظار الاعتماد، ولا تُعد سياسة رسمية.</p>
         <label for="studioVacancies">الحصص المطلوبة: رقم الحصة | الفصل | المعلمة الغائبة</label>
         <textarea id="studioVacancies" rows="5" placeholder="1 | أول 1 | اسم المعلمة الغائبة"></textarea>
         <div class="studio-buttons">
